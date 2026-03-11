@@ -36,7 +36,7 @@ export default function Inbox() {
 
   // Subscribe to message queue for typing indicators
   useEffect(() => {
-    return messageQueue.subscribe(() => {
+    const unsub = messageQueue.subscribe(() => {
       const typing = new Set<string>();
       customers.forEach(c => {
         const status = messageQueue.getTypingStatus(c.id);
