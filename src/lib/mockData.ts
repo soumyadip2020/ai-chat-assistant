@@ -1,3 +1,5 @@
+export type ConversationStatus = 'new_lead' | 'active' | 'waiting_human' | 'closed';
+
 export interface Customer {
   id: string;
   name: string;
@@ -9,6 +11,9 @@ export interface Customer {
   avatar?: string;
   notes: string;
   leadStatus: 'New' | 'Contacted' | 'Qualified' | 'Converted' | 'Lost';
+  conversationStatus: ConversationStatus;
+  lastInteraction: string;
+  email?: string;
 }
 
 export interface Message {
@@ -27,9 +32,10 @@ export interface Campaign {
   message: string;
   targetTags: string[];
   scheduledAt: string;
-  status: 'draft' | 'scheduled' | 'sent' | 'completed';
+  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'completed';
   recipientCount: number;
   deliveredCount: number;
+  maxRecipients: number;
 }
 
 export interface KnowledgeBase {
@@ -41,15 +47,17 @@ export interface KnowledgeBase {
   openingHours: string;
 }
 
+export const MAX_CAMPAIGN_RECIPIENTS = 100;
+
 export const mockCustomers: Customer[] = [
-  { id: '1', name: 'Sarah Johnson', phone: '+1 (555) 234-5678', tag: 'VIP', lastMessage: 'Thank you for the reservation!', lastMessageTime: '2 min ago', unread: 2, notes: 'Regular guest, prefers suite rooms', leadStatus: 'Converted' },
-  { id: '2', name: 'Ahmed Hassan', phone: '+971 50 123 4567', tag: 'Lead', lastMessage: 'Do you have availability for next weekend?', lastMessageTime: '15 min ago', unread: 1, notes: '', leadStatus: 'New' },
-  { id: '3', name: 'Maria Garcia', phone: '+34 612 345 678', tag: 'Customer', lastMessage: 'Can I see the menu please?', lastMessageTime: '1 hr ago', unread: 0, notes: 'Vegetarian preferences', leadStatus: 'Qualified' },
-  { id: '4', name: 'James Chen', phone: '+86 138 1234 5678', tag: 'Lead', lastMessage: 'What are your prices for a haircut?', lastMessageTime: '2 hrs ago', unread: 3, notes: '', leadStatus: 'Contacted' },
-  { id: '5', name: 'Emily Brown', phone: '+44 7700 900123', tag: 'Customer', lastMessage: 'I need to reschedule my appointment', lastMessageTime: '3 hrs ago', unread: 0, notes: 'Prefers morning slots', leadStatus: 'Converted' },
-  { id: '6', name: 'Omar Khalil', phone: '+966 50 987 6543', tag: 'VIP', lastMessage: 'Is the spa available tomorrow?', lastMessageTime: '5 hrs ago', unread: 1, notes: 'Corporate client, high value', leadStatus: 'Converted' },
-  { id: '7', name: 'Lisa Park', phone: '+82 10 9876 5432', tag: 'Lead', lastMessage: 'Hello, I saw your ad on Instagram', lastMessageTime: '1 day ago', unread: 0, notes: '', leadStatus: 'New' },
-  { id: '8', name: 'David Miller', phone: '+1 (555) 876-5432', tag: 'Customer', lastMessage: 'The service was excellent!', lastMessageTime: '1 day ago', unread: 0, notes: 'Left 5-star review', leadStatus: 'Converted' },
+  { id: '1', name: 'Sarah Johnson', phone: '+1 (555) 234-5678', tag: 'VIP', lastMessage: 'Thank you for the reservation!', lastMessageTime: '2 min ago', unread: 2, notes: 'Regular guest, prefers suite rooms', leadStatus: 'Converted', conversationStatus: 'active', lastInteraction: '2 min ago' },
+  { id: '2', name: 'Ahmed Hassan', phone: '+971 50 123 4567', tag: 'Lead', lastMessage: 'Do you have availability for next weekend?', lastMessageTime: '15 min ago', unread: 1, notes: '', leadStatus: 'New', conversationStatus: 'new_lead', lastInteraction: '15 min ago' },
+  { id: '3', name: 'Maria Garcia', phone: '+34 612 345 678', tag: 'Customer', lastMessage: 'Can I see the menu please?', lastMessageTime: '1 hr ago', unread: 0, notes: 'Vegetarian preferences', leadStatus: 'Qualified', conversationStatus: 'active', lastInteraction: '1 hr ago' },
+  { id: '4', name: 'James Chen', phone: '+86 138 1234 5678', tag: 'Lead', lastMessage: 'What are your prices for a haircut?', lastMessageTime: '2 hrs ago', unread: 3, notes: '', leadStatus: 'Contacted', conversationStatus: 'waiting_human', lastInteraction: '2 hrs ago' },
+  { id: '5', name: 'Emily Brown', phone: '+44 7700 900123', tag: 'Customer', lastMessage: 'I need to reschedule my appointment', lastMessageTime: '3 hrs ago', unread: 0, notes: 'Prefers morning slots', leadStatus: 'Converted', conversationStatus: 'closed', lastInteraction: '3 hrs ago' },
+  { id: '6', name: 'Omar Khalil', phone: '+966 50 987 6543', tag: 'VIP', lastMessage: 'Is the spa available tomorrow?', lastMessageTime: '5 hrs ago', unread: 1, notes: 'Corporate client, high value', leadStatus: 'Converted', conversationStatus: 'active', lastInteraction: '5 hrs ago' },
+  { id: '7', name: 'Lisa Park', phone: '+82 10 9876 5432', tag: 'Lead', lastMessage: 'Hello, I saw your ad on Instagram', lastMessageTime: '1 day ago', unread: 0, notes: '', leadStatus: 'New', conversationStatus: 'new_lead', lastInteraction: '1 day ago' },
+  { id: '8', name: 'David Miller', phone: '+1 (555) 876-5432', tag: 'Customer', lastMessage: 'The service was excellent!', lastMessageTime: '1 day ago', unread: 0, notes: 'Left 5-star review', leadStatus: 'Converted', conversationStatus: 'closed', lastInteraction: '1 day ago' },
 ];
 
 export const mockMessages: Record<string, Message[]> = {
@@ -83,9 +91,9 @@ export const mockMessages: Record<string, Message[]> = {
 };
 
 export const mockCampaigns: Campaign[] = [
-  { id: 'c1', name: 'Holiday Season Promo', message: '🎄 Special holiday offer! Get 20% off all bookings from Dec 20 - Jan 5. Use code HOLIDAY20. Book now!', targetTags: ['Customer', 'VIP'], scheduledAt: '2024-12-15T10:00:00', status: 'scheduled', recipientCount: 245, deliveredCount: 0 },
-  { id: 'c2', name: 'New Year Welcome', message: '🎆 Happy New Year! Start 2025 with a fresh look. Book any service and get a complimentary upgrade!', targetTags: ['Lead'], scheduledAt: '2025-01-01T00:00:00', status: 'draft', recipientCount: 120, deliveredCount: 0 },
-  { id: 'c3', name: 'VIP Appreciation', message: '⭐ As a valued VIP guest, enjoy an exclusive 30% discount on your next visit. Valid until end of month.', targetTags: ['VIP'], scheduledAt: '2024-11-01T09:00:00', status: 'completed', recipientCount: 45, deliveredCount: 43 },
+  { id: 'c1', name: 'Holiday Season Promo', message: '🎄 Special holiday offer! Get 20% off all bookings from Dec 20 - Jan 5. Use code HOLIDAY20. Book now!', targetTags: ['Customer', 'VIP'], scheduledAt: '2024-12-15T10:00:00', status: 'scheduled', recipientCount: 85, deliveredCount: 0, maxRecipients: 100 },
+  { id: 'c2', name: 'New Year Welcome', message: '🎆 Happy New Year! Start 2025 with a fresh look. Book any service and get a complimentary upgrade!', targetTags: ['Lead'], scheduledAt: '2025-01-01T00:00:00', status: 'draft', recipientCount: 42, deliveredCount: 0, maxRecipients: 100 },
+  { id: 'c3', name: 'VIP Appreciation', message: '⭐ As a valued VIP guest, enjoy an exclusive 30% discount on your next visit. Valid until end of month.', targetTags: ['VIP'], scheduledAt: '2024-11-01T09:00:00', status: 'completed', recipientCount: 45, deliveredCount: 43, maxRecipients: 100 },
 ];
 
 export const defaultKnowledgeBase: KnowledgeBase = {
