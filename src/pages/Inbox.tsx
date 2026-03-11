@@ -44,6 +44,7 @@ export default function Inbox() {
       });
       setTypingConversations(typing);
     });
+    return () => { unsub(); };
   }, [customers]);
 
   const handleSend = async () => {
