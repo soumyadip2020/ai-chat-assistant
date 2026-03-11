@@ -11,6 +11,7 @@
 
 /**
  * Generate AI response for customer message
+ * Considers conversation history and business knowledge base
  * TODO: Connect to AI language model API (e.g., OpenAI, Anthropic)
  */
 export async function generateAIResponse(
@@ -19,10 +20,31 @@ export async function generateAIResponse(
   knowledgeBase?: Record<string, string>
 ): Promise<string> {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
+
+  const lowerMsg = message.toLowerCase();
+
+  // Context-aware placeholder responses
+  if (lowerMsg.includes('price') || lowerMsg.includes('cost') || lowerMsg.includes('how much')) {
+    return "Great question about pricing! Let me pull up our current rates for you. Based on your inquiry, I can offer you several options that fit different budgets. Would you like me to send you our detailed price list? 💰";
+  }
+  if (lowerMsg.includes('book') || lowerMsg.includes('reserve') || lowerMsg.includes('appointment')) {
+    return "I'd love to help you with a booking! 📅 Let me check our availability. Could you please confirm your preferred date and time? I'll make sure to secure the best slot for you.";
+  }
+  if (lowerMsg.includes('cancel') || lowerMsg.includes('reschedule')) {
+    return "No problem at all! I understand plans can change. Let me look up your booking details so we can get this sorted quickly. Could you share your booking reference or the date of your original appointment? 🔄";
+  }
+  if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey')) {
+    return "Hello! Welcome! 😊 I'm here to help you with anything you need. Whether it's making a reservation, learning about our services, or answering any questions — just let me know how I can assist you today!";
+  }
+
+  // Check conversation length for follow-up awareness
+  if (conversationHistory.length > 4) {
+    return "Thank you for your patience throughout our conversation! Based on everything we've discussed, I want to make sure we've covered all your needs. Is there anything else I can help you with, or shall I summarize what we've arranged? ✨";
+  }
 
   const responses = [
-    "Thank you for your message! I'd be happy to help you with that. Let me check our availability and get back to you shortly. 😊",
+    "Thank you for your message! I'd be happy to help you with that. Let me check our system and get back to you with the best options. 😊",
     "Great question! Based on our current offerings, I can provide you with several options. Would you prefer to discuss this over a call or shall I send the details here?",
     "I appreciate you reaching out! Your request has been noted, and I'll make sure to prioritize it. Is there anything else I can assist you with?",
     "Welcome! I'm here to help you have the best experience possible. Let me look into that for you right away.",
@@ -77,15 +99,36 @@ export async function sendWhatsAppMessage(
 }
 
 /**
- * Send bulk WhatsApp campaign
+ * Send bulk WhatsApp campaign with staggered delivery
+ * Each message sends with a random delay of 10-45 seconds
  * TODO: Connect to WhatsApp Business API bulk messaging
  */
 export async function sendBulkCampaign(
   phoneNumbers: string[],
-  message: string
+  message: string,
+  onProgress?: (sent: number, total: number) => void
 ): Promise<{ sent: number; failed: number }> {
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  return { sent: phoneNumbers.length - 1, failed: 1 };
+  const total = phoneNumbers.length;
+  let sent = 0;
+  let failed = 0;
+
+  for (let i = 0; i < total; i++) {
+    // Simulate staggered send delay (10-45 seconds compressed to 200-800ms for demo)
+    await new Promise(resolve =>
+      setTimeout(resolve, 200 + Math.random() * 600)
+    );
+
+    // 95% success rate simulation
+    if (Math.random() > 0.05) {
+      sent++;
+    } else {
+      failed++;
+    }
+
+    onProgress?.(sent + failed, total);
+  }
+
+  return { sent, failed };
 }
 
 /**
@@ -98,4 +141,28 @@ export async function flagForHumanSupport(
 ): Promise<void> {
   console.log(`[HUMAN HANDOFF] Conversation ${conversationId} flagged. Reason: ${reason || 'Customer request'}`);
   await new Promise(resolve => setTimeout(resolve, 300));
+}
+
+/**
+ * Process incoming message by type
+ * Routes voice/image messages through appropriate pipelines
+ */
+export async function processIncomingMessage(
+  type: 'text' | 'voice' | 'image' | 'document',
+  content: string,
+  conversationHistory: Array<{ role: string; content: string }>,
+  knowledgeBase?: Record<string, string>
+): Promise<string> {
+  let processedContent = content;
+
+  if (type === 'voice') {
+    processedContent = await transcribeVoiceMessage(content);
+  } else if (type === 'image') {
+    const analysis = await analyzeImage(content);
+    processedContent = `[Customer sent an image] Analysis: ${analysis}`;
+  } else if (type === 'document') {
+    processedContent = `[Customer sent a document: ${content}]`;
+  }
+
+  return generateAIResponse(processedContent, conversationHistory, knowledgeBase);
 }
