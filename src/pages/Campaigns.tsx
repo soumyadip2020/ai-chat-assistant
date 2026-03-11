@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { mockCampaigns, mockCustomers, type Campaign } from '@/lib/mockData';
+import { type Campaign } from '@/lib/mockData';
 import { sendBulkCampaign } from '@/lib/placeholderFunctions';
-import { Plus, Send, Clock, CheckCircle, FileText } from 'lucide-react';
+import { Plus, Send, Clock, CheckCircle, FileText, Megaphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 export default function Campaigns() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newCampaign, setNewCampaign] = useState({ name: '', message: '', targetTags: [] as string[] });
 
@@ -42,22 +42,20 @@ export default function Campaigns() {
       toast.error('Please fill all fields and select at least one tag');
       return;
     }
-    const recipients = mockCustomers.filter(c => newCampaign.targetTags.includes(c.tag));
     const campaign: Campaign = {
       id: `c_${Date.now()}`, name: newCampaign.name, message: newCampaign.message,
       targetTags: newCampaign.targetTags, scheduledAt: new Date().toISOString(),
-      status: 'scheduled', recipientCount: recipients.length, deliveredCount: 0,
+      status: 'scheduled', recipientCount: 0, deliveredCount: 0,
     };
     setCampaigns(prev => [campaign, ...prev]);
     setNewCampaign({ name: '', message: '', targetTags: [] });
     setShowCreate(false);
-    toast.success(`Campaign "${campaign.name}" created with ${recipients.length} recipients`);
+    toast.success(`Campaign "${campaign.name}" created`);
   };
 
   const handleSend = async (campaign: Campaign) => {
-    const recipients = mockCustomers.filter(c => campaign.targetTags.includes(c.tag));
     toast.info('Sending campaign...');
-    const result = await sendBulkCampaign(recipients.map(r => r.phone), campaign.message);
+    const result = await sendBulkCampaign([], campaign.message);
     setCampaigns(prev => prev.map(c => c.id === campaign.id ? { ...c, status: 'completed' as const, deliveredCount: result.sent } : c));
     toast.success(`Campaign sent! ${result.sent} delivered, ${result.failed} failed`);
   };
@@ -106,30 +104,38 @@ export default function Campaigns() {
       )}
 
       <div className="space-y-3">
-        {campaigns.map((c, i) => (
-          <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-            className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                {statusIcon(c.status)}
-                <h3 className="font-medium text-foreground text-sm">{c.name}</h3>
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${statusBadge(c.status)}`}>{c.status}</span>
+        {campaigns.length === 0 && !showCreate ? (
+          <div className="bg-card border border-border rounded-xl flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Megaphone className="w-10 h-10 mb-3 opacity-40" />
+            <p className="text-sm font-medium">No campaigns yet</p>
+            <p className="text-xs mt-1">Create your first campaign to reach customers</p>
+          </div>
+        ) : (
+          campaigns.map((c, i) => (
+            <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+              className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  {statusIcon(c.status)}
+                  <h3 className="font-medium text-foreground text-sm">{c.name}</h3>
+                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${statusBadge(c.status)}`}>{c.status}</span>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-1">{c.message}</p>
+                <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                  <span>Tags: {c.targetTags.join(', ')}</span>
+                  <span>Recipients: {c.recipientCount}</span>
+                  {c.deliveredCount > 0 && <span>Delivered: {c.deliveredCount}</span>}
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground line-clamp-1">{c.message}</p>
-              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                <span>Tags: {c.targetTags.join(', ')}</span>
-                <span>Recipients: {c.recipientCount}</span>
-                {c.deliveredCount > 0 && <span>Delivered: {c.deliveredCount}</span>}
-              </div>
-            </div>
-            {(c.status === 'scheduled' || c.status === 'draft') && (
-              <button onClick={() => handleSend(c)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg gradient-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity whitespace-nowrap">
-                <Send className="w-3 h-3" />Send Now
-              </button>
-            )}
-          </motion.div>
-        ))}
+              {(c.status === 'scheduled' || c.status === 'draft') && (
+                <button onClick={() => handleSend(c)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg gradient-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity whitespace-nowrap">
+                  <Send className="w-3 h-3" />Send Now
+                </button>
+              )}
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );

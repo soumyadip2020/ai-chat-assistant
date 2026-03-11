@@ -1,15 +1,14 @@
 import { motion } from 'framer-motion';
 import { MessageSquare, Users, Zap, ThumbsUp, TrendingUp, Bot } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { dashboardStats, messagesPerDay, conversationTrends } from '@/lib/mockData';
 import { useState } from 'react';
 
 const stats = [
-  { label: 'Total Conversations', value: dashboardStats.totalConversations.toLocaleString(), icon: MessageSquare, change: '+12%' },
-  { label: 'New Leads', value: dashboardStats.newLeads.toString(), icon: Users, change: '+8%' },
-  { label: 'Messages Today', value: dashboardStats.messagesToday.toString(), icon: Zap, change: '+23%' },
-  { label: 'AI Responses', value: dashboardStats.aiResponsesSent.toString(), icon: Bot, change: '+18%' },
-  { label: 'Satisfaction', value: `${dashboardStats.customerSatisfaction}%`, icon: ThumbsUp, change: '+2%' },
+  { label: 'Total Conversations', value: '0', icon: MessageSquare, change: '—' },
+  { label: 'New Leads', value: '0', icon: Users, change: '—' },
+  { label: 'Messages Today', value: '0', icon: Zap, change: '—' },
+  { label: 'AI Responses', value: '0', icon: Bot, change: '—' },
+  { label: 'Satisfaction', value: '—', icon: ThumbsUp, change: '—' },
 ];
 
 export default function Dashboard() {
@@ -42,9 +41,7 @@ export default function Dashboard() {
             className="bg-card border border-border rounded-xl p-4 hover:shadow-glow transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <stat.icon className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs font-medium text-primary flex items-center gap-0.5">
-                <TrendingUp className="w-3 h-3" />{stat.change}
-              </span>
+              <span className="text-xs font-medium text-muted-foreground">{stat.change}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{stat.value}</p>
             <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
@@ -52,39 +49,22 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Charts */}
+      {/* Charts - empty state */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
           className="bg-card border border-border rounded-xl p-5">
           <h3 className="text-sm font-semibold text-foreground mb-4">Messages This Week</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={messagesPerDay}>
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-              <Bar dataKey="messages" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="aiReplies" fill="hsl(var(--primary) / 0.4)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="flex items-center justify-center h-[240px] text-muted-foreground text-sm">
+            No message data yet
+          </div>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
           className="bg-card border border-border rounded-xl p-5">
           <h3 className="text-sm font-semibold text-foreground mb-4">Conversation Trends</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={conversationTrends}>
-              <defs>
-                <linearGradient id="colorConv" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-              <Area type="monotone" dataKey="conversations" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorConv)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
+          <div className="flex items-center justify-center h-[240px] text-muted-foreground text-sm">
+            No conversation data yet
+          </div>
         </motion.div>
       </div>
     </div>

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { mockCustomers, type Customer } from '@/lib/mockData';
-import { Search, Filter, ChevronDown } from 'lucide-react';
+import { type Customer } from '@/lib/mockData';
+import { Search, Filter, ChevronDown, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Customers() {
-  const [customers] = useState<Customer[]>(mockCustomers);
+  const [customers] = useState<Customer[]>([]);
   const [search, setSearch] = useState('');
   const [tagFilter, setTagFilter] = useState<string>('All');
 
@@ -61,42 +61,50 @@ export default function Customers() {
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left font-medium text-muted-foreground px-4 py-3">Customer</th>
-                <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden sm:table-cell">Phone</th>
-                <th className="text-left font-medium text-muted-foreground px-4 py-3">Tag</th>
-                <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">Status</th>
-                <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Last Message</th>
-                <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c, i) => (
-                <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                  className="border-b border-border last:border-0 hover:bg-secondary/50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-xs flex-shrink-0">
-                        {c.name.split(' ').map(n => n[0]).join('')}
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Users className="w-10 h-10 mb-3 opacity-40" />
+            <p className="text-sm font-medium">No customers yet</p>
+            <p className="text-xs mt-1">Customers will appear here as conversations come in</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left font-medium text-muted-foreground px-4 py-3">Customer</th>
+                  <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden sm:table-cell">Phone</th>
+                  <th className="text-left font-medium text-muted-foreground px-4 py-3">Tag</th>
+                  <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">Status</th>
+                  <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Last Message</th>
+                  <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((c, i) => (
+                  <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                    className="border-b border-border last:border-0 hover:bg-secondary/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-xs flex-shrink-0">
+                          {c.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <span className="font-medium text-foreground">{c.name}</span>
                       </div>
-                      <span className="font-medium text-foreground">{c.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{c.phone}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${tagColor(c.tag)}`}>{c.tag}</span>
-                  </td>
-                  <td className={`px-4 py-3 font-medium hidden md:table-cell ${statusColor(c.leadStatus)}`}>{c.leadStatus}</td>
-                  <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate hidden lg:table-cell">{c.lastMessage}</td>
-                  <td className="px-4 py-3 text-muted-foreground max-w-[150px] truncate hidden lg:table-cell">{c.notes || '—'}</td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{c.phone}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${tagColor(c.tag)}`}>{c.tag}</span>
+                    </td>
+                    <td className={`px-4 py-3 font-medium hidden md:table-cell ${statusColor(c.leadStatus)}`}>{c.leadStatus}</td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate hidden lg:table-cell">{c.lastMessage}</td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[150px] truncate hidden lg:table-cell">{c.notes || '—'}</td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

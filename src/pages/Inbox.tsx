@@ -1,21 +1,22 @@
 import { useState } from 'react';
-import { mockCustomers, mockMessages, type Customer, type Message } from '@/lib/mockData';
+import { type Customer, type Message } from '@/lib/mockData';
 import { generateAIResponse, flagForHumanSupport } from '@/lib/placeholderFunctions';
-import { Send, Mic, Image, Phone, MoreVertical, Search, AlertTriangle, Bot, User } from 'lucide-react';
+import { Send, Mic, Image, Phone, MoreVertical, Search, AlertTriangle, Bot, User, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
 export default function Inbox() {
-  const [selectedId, setSelectedId] = useState<string | null>('1');
-  const [messages, setMessages] = useState(mockMessages);
+  const [customers] = useState<Customer[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [reply, setReply] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileChat, setShowMobileChat] = useState(false);
 
-  const selected = mockCustomers.find(c => c.id === selectedId);
+  const selected = customers.find(c => c.id === selectedId);
   const currentMessages = selectedId ? (messages[selectedId] || []) : [];
 
-  const filteredCustomers = mockCustomers.filter(c =>
+  const filteredCustomers = customers.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.phone.includes(searchQuery)
   );
@@ -78,25 +79,33 @@ export default function Inbox() {
           </div>
         </div>
         <div className="flex-1 overflow-auto">
-          {filteredCustomers.map(c => (
-            <button key={c.id} onClick={() => selectCustomer(c)}
-              className={`w-full flex items-start gap-3 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors text-left ${selectedId === c.id ? 'bg-secondary' : ''}`}>
-              <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm flex-shrink-0">
-                {c.name.split(' ').map(n => n[0]).join('')}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground truncate">{c.name}</span>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">{c.lastMessageTime}</span>
+          {filteredCustomers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6 text-center">
+              <MessageSquare className="w-10 h-10 mb-3 opacity-40" />
+              <p className="text-sm font-medium">No conversations yet</p>
+              <p className="text-xs mt-1">Customer conversations will appear here</p>
+            </div>
+          ) : (
+            filteredCustomers.map(c => (
+              <button key={c.id} onClick={() => selectCustomer(c)}
+                className={`w-full flex items-start gap-3 px-4 py-3 border-b border-border hover:bg-secondary/50 transition-colors text-left ${selectedId === c.id ? 'bg-secondary' : ''}`}>
+                <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-sm flex-shrink-0">
+                  {c.name.split(' ').map(n => n[0]).join('')}
                 </div>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">{c.lastMessage}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${tagColor(c.tag)}`}>{c.tag}</span>
-                  {c.unread > 0 && <span className="bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{c.unread}</span>}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground truncate">{c.name}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">{c.lastMessageTime}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{c.lastMessage}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${tagColor(c.tag)}`}>{c.tag}</span>
+                    {c.unread > 0 && <span className="bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{c.unread}</span>}
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            ))
+          )}
         </div>
       </div>
 
@@ -196,7 +205,8 @@ export default function Inbox() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
+            <MessageSquare className="w-12 h-12 opacity-30" />
             <p className="text-sm">Select a conversation to start</p>
           </div>
         )}
